@@ -1,4 +1,4 @@
-# Sistema de Contabilização de Vendas — Filial 8340
+# Sistema de Contabilização de Vendas 
 
 Sistema web desenvolvido para substituir o controle manual de vendas em planilhas Excel, permitindo à gestão da filial registrar, acompanhar e analisar o desempenho diário da equipe e da loja.
 
