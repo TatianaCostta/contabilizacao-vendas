@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contabilização de Vendas — Filial 8340</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+<!-- Firebase (compat SDK, sem build tool) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+  :root{
+    --navy: #101B33;
+    --navy-2: #172548;
+    --navy-light: #2A3B66;
+    --gold: #C89B3C;
+    --gold-light: #E5C879;
+    --bg: #EEF1F6;
+    --surface: #FFFFFF;
+    --line: #DCE1EA;
+    --ink: #16213A;
+    --ink-soft: #5B6579;
+    --good: #2F7D5C;
+    --good-bg: #E4F3EC;
+    --ok: #3E7CB1;
+    --ok-bg: #E7F0F9;
+    --warn: #B7791F;
+    --warn-bg: #FBF0DC;
+    --bad: #A5322F;
+    --bad-bg: #FBE7E6;
+    --radius: 10px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;font-size:14px;}
+  h1,h2,h3,.display{font-family:'Fraunces',serif;letter-spacing:-0.01em;}
+  .num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;}
+  button{font-family:inherit;cursor:pointer;}
+  input,select{font-family:inherit;}
+
+  /* ---------- LOGIN ---------- */
+  #login-screen{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, #1c2c56 0%, transparent 60%),
+      var(--navy);
+    padding:24px;
+  }
+  .login-card{
+    width:100%;max-width:380px;background:var(--navy-2);border:1px solid var(--navy-light);
+    border-radius:16px;padding:36px 32px;color:#EDEFF5;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);
+  }
+  .login-eyebrow{color:var(--gold-light);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;margin:0 0 6px;}
+  .login-title{font-size:26px;margin:0 0 26px;color:#fff;font-weight:600;}
+  .login-card .field{margin-bottom:16px;}
+  .login-card .field label{display:block;font-size:12px;color:#AEB7CC;margin-bottom:6px;font-weight:500;}
+  .login-card .field input{
+    width:100%;padding:11px 12px;border-radius:8px;border:1px solid #33436E;
+    background:#0D1730;color:#fff;font-size:14px;outline:none;transition:border-color .15s;
+  }
+  .login-card .field input:focus{border-color:var(--gold);}
+  .btn-primary{
+    width:100%;padding:12px;border-radius:8px;border:none;background:var(--gold);
+    color:#1B1300;font-weight:700;font-size:14px;margin-top:6px;transition:filter .15s;
+  }
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-primary:disabled{opacity:.6;cursor:default;}
+  .login-link{display:block;text-align:center;margin-top:16px;color:#9FB0D6;font-size:12.5px;text-decoration:none;}
+  .login-link:hover{color:var(--gold-light);}
+  .login-error{background:var(--bad-bg);color:var(--bad);border-radius:8px;padding:9px 12px;font-size:12.5px;margin-bottom:14px;display:none;}
+  .login-notice{background:#173049;color:#9FD0E8;border-radius:8px;padding:9px 12px;font-size:12.5px;margin-bottom:14px;display:none;}
+
+  /* ---------- APP SHELL ---------- */
+  #app{display:none;min-height:100vh;}
+  .shell{display:flex;min-height:100vh;}
+  .sidebar{
+    width:222px;flex-shrink:0;background:var(--navy);color:#D8DEEC;
+    display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+  }
+  .brand{padding:22px 20px 16px;border-bottom:1px solid var(--navy-light);}
+  .brand-eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-light);font-weight:600;margin:0 0 4px;}
+  .brand-name{font-family:'Fraunces',serif;font-size:19px;color:#fff;margin:0;}
+  .nav{flex:1;padding:14px 10px;}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;margin-bottom:2px;
+    color:#AEB7CC;font-size:13.5px;font-weight:500;cursor:pointer;transition:background .12s,color .12s;
+    border-left:3px solid transparent;
+  }
+  .nav-item:hover{background:var(--navy-2);color:#fff;}
+  .nav-item.active{background:var(--navy-2);color:#fff;border-left-color:var(--gold);}
+  .nav-item.disabled{opacity:.4;cursor:default;}
+  .nav-item.disabled:hover{background:none;color:#AEB7CC;}
+  .nav-tag{margin-left:auto;font-size:9px;background:var(--navy-light);color:#9FB0D6;padding:2px 6px;border-radius:20px;letter-spacing:.03em;}
+  .sidebar-footer{padding:14px 18px 18px;border-top:1px solid var(--navy-light);}
+  .user-row{display:flex;align-items:center;justify-content:space-between;}
+  .user-email{font-size:12px;color:#9FB0D6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;}
+  .logout-btn{background:none;border:none;color:#9FB0D6;font-size:11px;text-decoration:underline;padding:0;}
+  .logout-btn:hover{color:var(--gold-light);}
+
+  .main{flex:1;padding:32px 40px;max-width:1180px;}
+  .page-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px;}
+  .page-eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;margin:0 0 4px;}
+  .page-title{font-size:26px;margin:0;color:var(--navy);}
+
+  .btn{
+    padding:9px 16px;border-radius:8px;border:1px solid var(--line);background:var(--surface);
+    color:var(--ink);font-size:13px;font-weight:600;transition:border-color .12s,background .12s;
+  }
+  .btn:hover{border-color:var(--navy-light);}
+  .btn-gold{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .btn-gold:hover{background:var(--navy-2);}
+  .btn-gold span.k{color:var(--gold-light);}
+  .btn-danger-text{background:none;border:none;color:var(--bad);font-size:12.5px;font-weight:600;padding:0;text-decoration:underline;}
+  .btn-ghost-text{background:none;border:none;color:var(--ok);font-size:12.5px;font-weight:600;padding:0;text-decoration:underline;margin-right:14px;}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;margin-bottom:20px;}
+  .card-title{font-size:15px;font-weight:600;margin:0 0 4px;color:var(--navy);}
+  .card-sub{font-size:12.5px;color:var(--ink-soft);margin:0 0 18px;}
+
+  table{width:100%;border-collapse:collapse;}
+  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:600;padding:0 12px 10px;border-bottom:1px solid var(--line);}
+  td{padding:12px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:600;}
+  .badge-ativo{background:var(--good-bg);color:var(--good);}
+  .badge-inativo{background:#EEF0F4;color:var(--ink-soft);}
+  .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+  .empty{text-align:center;padding:50px 20px;color:var(--ink-soft);}
+  .empty .display{font-size:17px;color:var(--navy);margin-bottom:6px;}
+
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(16,27,51,.55);align-items:center;justify-content:center;z-index:50;padding:20px;}
+  .modal{background:#fff;border-radius:14px;padding:28px;width:100%;max-width:420px;}
+  .modal h3{margin:0 0 18px;font-size:18px;color:var(--navy);}
+  .modal .field label{font-size:12px;color:var(--ink-soft);font-weight:600;margin-bottom:6px;display:block;}
+  .modal .field input, .modal .field select{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;color:var(--ink);
+  }
+  .modal .field{margin-bottom:14px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+  .btn-cancel{background:none;border:none;color:var(--ink-soft);font-weight:600;font-size:13px;}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;
+    padding:12px 20px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.2);
+    display:none;z-index:100;}
+  .toast.err{background:var(--bad);}
+
+  .stat-row{display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
+  .stat{flex:1;min-width:150px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;}
+  .stat-label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:600;margin:0 0 6px;}
+  .stat-value{font-size:22px;font-weight:600;margin:0;color:var(--navy);}
+  .stat-value.gold{color:#8A6A1E;}
+
+  .meta-input{width:150px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-size:13.5px;text-align:right;}
+  .meta-input:disabled{background:#F4F5F8;color:var(--ink-soft);}
+  .lock-note{display:flex;align-items:center;gap:8px;background:var(--warn-bg);color:#7A5310;border-radius:8px;padding:10px 14px;font-size:12.5px;margin-bottom:18px;}
+  select.period-select{padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;color:var(--ink);background:#fff;}
+
+  .badge-bad{background:var(--bad-bg);color:var(--bad);}
+  .badge-warn{background:var(--warn-bg);color:var(--warn);}
+  .badge-ok{background:var(--ok-bg);color:var(--ok);}
+  .badge-good{background:var(--good-bg);color:var(--good);}
+  .badge-excellent{background:#FBF1DA;color:#8A6A1E;}
+  .rank-pos{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--ink-soft);}
+  .rank-pos.top{color:#8A6A1E;}
+  .icon-btn-del{background:none;border:none;color:var(--ink-soft);font-size:15px;padding:2px 6px;}
+  .icon-btn-del:hover{color:var(--bad);}
+
+  .rank-legend{display:flex;gap:18px;flex-wrap:wrap;padding:14px 4px 4px;font-size:12px;color:var(--ink-soft);}
+  .rank-legend-item{display:flex;align-items:center;gap:6px;}
+  .rank-legend-dot{width:11px;height:11px;border-radius:50%;display:inline-block;}
+  .rank-legend-dot.badge-bad{background:var(--bad);}
+  .rank-legend-dot.badge-warn{background:var(--warn);}
+  .rank-legend-dot.badge-ok{background:var(--ok);}
+  .rank-legend-dot.badge-good{background:var(--good);}
+  .rank-legend-dot.badge-excellent{background:#8A6A1E;}
+
+  .vendedor-nome{display:inline-flex;align-items:center;gap:9px;font-weight:700;color:var(--navy);font-size:14px;}
+  .vendedor-avatar{
+    width:26px;height:26px;border-radius:50%;background:var(--navy);color:var(--gold-light);
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;
+    font-family:'IBM Plex Mono',monospace;flex-shrink:0;border:2px solid var(--gold);
+  }
+  .valor-falta{color:var(--bad);font-weight:600;}
+  .valor-destaque{font-weight:700;}
+
+  /* ---------- PLACAR DO DIA (bilhete de embarque) ---------- */
+  #placar-canvas-wrap{position:fixed;left:-9999px;top:0;}
+  .placar-ticket{
+    width:720px;background:#fff;font-family:'IBM Plex Sans',sans-serif;color:var(--navy);
+    border-radius:18px;overflow:hidden;box-shadow:0 20px 50px rgba(16,27,51,.25);
+  }
+  .placar-head{
+    background:var(--navy);color:#fff;padding:26px 30px 22px;position:relative;
+    background-image:radial-gradient(circle at 90% -20%, #24356633 0%, transparent 55%);
+  }
+  .placar-eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-light);font-weight:700;margin:0 0 6px;}
+  .placar-title{font-family:'Fraunces',serif;font-size:28px;margin:0;}
+  .placar-date{position:absolute;right:30px;top:26px;text-align:right;font-size:12px;color:#AEB7CC;}
+  .placar-date b{display:block;font-size:15px;color:#fff;font-family:'IBM Plex Mono',monospace;}
+  .placar-perf{
+    display:flex;justify-content:space-between;align-items:center;background:#0D1730;padding:14px 30px;
+    border-top:1px dashed #33436E;
+  }
+  .placar-perf-item{text-align:center;flex:1;}
+  .placar-perf-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#8493B5;margin:0 0 4px;}
+  .placar-perf-value{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:700;color:#fff;margin:0;}
+  .placar-perf-value.gold{color:var(--gold-light);}
+  .placar-punch{position:relative;height:0;}
+  .placar-punch::before, .placar-punch::after{
+    content:'';position:absolute;top:-11px;width:22px;height:22px;background:var(--bg);border-radius:50%;
+  }
+  .placar-punch::before{left:-11px;} .placar-punch::after{right:-11px;}
+  .placar-body{padding:22px 30px 26px;}
+  .placar-rank-row{padding:13px 0;border-bottom:1px solid #EEF0F4;}
+  .placar-rank-row:last-child{border-bottom:none;}
+  .placar-rank-top{display:flex;align-items:center;gap:12px;margin-bottom:9px;}
+  .placar-medal{
+    width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:12px;flex-shrink:0;
+  }
+  .placar-medal.m1{background:#FBF1DA;color:#8A6A1E;}
+  .placar-medal.m2{background:#EEF1F6;color:#5B6579;}
+  .placar-medal.m3{background:#F3E6DE;color:#8A5A3E;}
+  .placar-medal.mn{background:#F4F5F8;color:#9098AA;}
+  .placar-rank-name{flex:1;font-weight:700;font-size:15px;}
+  .placar-rank-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding-left:40px;}
+  .placar-stat-mini-label{font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:#9098AA;margin:0 0 2px;font-weight:600;}
+  .placar-stat-mini-value{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13.5px;color:var(--navy);}
+  .placar-footer{
+    padding:14px 30px;background:var(--bg);text-align:center;font-size:11px;color:var(--ink-soft);
+    letter-spacing:.04em;
+  }
+
+  @media (max-width: 820px){
+    .shell{flex-direction:column;}
+    .sidebar{width:100%;height:auto;position:relative;flex-direction:row;overflow-x:auto;}
+    .brand{border-bottom:none;border-right:1px solid var(--navy-light);}
+    .nav{display:flex;padding:10px;}
+    .nav-item{margin-right:4px;margin-bottom:0;white-space:nowrap;}
+    .sidebar-footer{display:none;}
+    .main{padding:20px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="login-screen">
+  <div class="login-card">
+    <p class="login-eyebrow">Filial 8340</p>
+    <h1 class="login-title">Contabilização de Vendas</h1>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-notice" id="login-notice"></div>
+    <div class="field">
+      <label>E-mail</label>
+      <input type="email" id="login-email" placeholder="seuemail@exemplo.com" autocomplete="username">
+    </div>
+    <div class="field" id="login-pass-field">
+      <label>Senha</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="login-btn">Entrar</button>
+    <a href="#" class="login-link" id="forgot-link">Esqueci minha senha</a>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <p class="brand-eyebrow">Filial 8340</p>
+        <h2 class="brand-name">Placar&nbsp;&amp;&nbsp;Metas</h2>
+      </div>
+      <nav class="nav">
+        <div class="nav-item" data-page="vendedores">👥 Vendedores</div>
+        <div class="nav-item" data-page="metas">🎯 Metas do mês</div>
+        <div class="nav-item" data-page="lancamentos">💰 Lançar vendas</div>
+        <div class="nav-item" data-page="ranking">🏆 Ranking</div>
+        <div class="nav-item" data-page="historico">🕓 Histórico</div>
+        <div class="nav-item" data-page="dashboard">📊 Dashboard anual</div>
+        <div class="nav-item" data-page="relatorios">📄 Relatórios</div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-row">
+          <span class="user-email" id="user-email"></span>
+          <button class="logout-btn" id="logout-btn">Sair</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- ---------- PÁGINA VENDEDORES ---------- -->
+      <section id="page-vendedores" style="display:none;">
+        <div class="page-head">
+          <div>
+            <p class="page-eyebrow">Equipe</p>
+            <h1 class="page-title">Vendedores</h1>
+          </div>
+          <button class="btn btn-gold" id="btn-novo-vendedor">+ Novo vendedor</button>
+        </div>
+
+        <div class="card" style="padding:0;">
+          <table id="tabela-vendedores">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Status</th>
+                <th>Cadastrado em</th>
+                <th style="text-align:right;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="corpo-vendedores"></tbody>
+          </table>
+          <div class="empty" id="empty-vendedores" style="display:none;">
+            <p class="display">Nenhum vendedor cadastrado</p>
+            <p style="margin:0;font-size:13px;">Cadastre a equipe da filial para começar a lançar metas e vendas.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- PÁGINA METAS ---------- -->
+      <section id="page-metas" style="display:none;">
+        <div class="page-head">
+          <div>
+            <p class="page-eyebrow">Planejamento mensal</p>
+            <h1 class="page-title">Metas</h1>
+          </div>
+          <select class="period-select" id="select-periodo"></select>
+        </div>
+
+        <div id="lock-note" class="lock-note" style="display:none;">
+          🔒 Este período está fechado. Os valores não podem mais ser alterados.
+        </div>
+
+        <div class="card">
+          <p class="card-title">Meta global da filial</p>
+          <p class="card-sub">Defina a meta total do mês. A meta individual de cada vendedor ativo é calculada automaticamente, dividindo esse valor igualmente entre eles.</p>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-weight:600;color:var(--ink-soft);">R$</span>
+            <input type="number" class="meta-input" id="input-meta-filial" style="width:200px;" placeholder="0,00" min="0" step="100">
+            <button class="btn btn-gold" id="btn-salvar-meta-filial">Salvar meta da filial</button>
+          </div>
+        </div>
+
+        <div class="stat-row" id="metas-stats"></div>
+
+        <div class="card" style="padding:0;">
+          <div style="padding:20px 24px 0;">
+            <p class="card-title">Meta individual por vendedor</p>
+            <p class="card-sub">O valor é dividido automaticamente. Ajuste manualmente quando quiser distribuir a meta de forma diferente entre a equipe.</p>
+          </div>
+          <table id="tabela-metas">
+            <thead>
+              <tr>
+                <th>Vendedor</th>
+                <th style="text-align:right;">Meta individual (R$)</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="corpo-metas"></tbody>
+          </table>
+          <div class="empty" id="empty-metas" style="display:none;">
+            <p class="display">Nenhum vendedor ativo</p>
+            <p style="margin:0;font-size:13px;">Cadastre vendedores ativos na aba "Vendedores" para distribuir a meta entre eles.</p>
+          </div>
+        </div>
+
+        <div class="card" id="card-fechamento">
+          <p class="card-title">Fechamento do período</p>
+          <p class="card-sub" id="fechamento-texto">Ao fechar o mês, os dados de metas, vendas e ajustes deste período ficam bloqueados para alteração ou exclusão (RF37). Um novo período é aberto automaticamente ao selecionar o próximo mês.</p>
+          <button class="btn btn-gold" style="background:var(--bad);border-color:var(--bad);" id="btn-abrir-fechamento">Fechar este período</button>
+        </div>
+      </section>
+
+      <!-- ---------- PÁGINA HISTÓRICO ---------- -->
+      <section id="page-historico" style="display:none;">
+        <div class="page-head">
+          <div>
+            <p class="page-eyebrow">Auditoria</p>
+            <h1 class="page-title">Histórico de alterações</h1>
+          </div>
+        </div>
+        <div class="card" style="padding:0;">
+          <table>
+            <thead>
+              <tr><th>Quando</th><th>Usuário</th><th>Registro</th><th>Campo</th><th>De</th><th>Para</th></tr>
+            </thead>
+            <tbody id="corpo-historico"></tbody>
+          </table>
+          <div class="empty" id="empty-historico-geral" style="display:none;">
+            <p class="display">Nenhuma alteração registrada ainda</p>
+          </div>
+        </div>
+      </section>
+      <section id="page-lancamentos" style="display:none;">
+        <div class="page-head">
+          <div>
+            <p class="page-eyebrow">Operação diária</p>
+            <h1 class="page-title">Lançar vendas</h1>
+          </div>
+          <select class="period-select" id="select-periodo-lanc"></select>
+        </div>
+
+        <div id="lock-note-lanc" class="lock-note" style="display:none;">
+          🔒 Este período está fechado. Não é possível lançar ou editar vendas.
+        </div>
+
+        <div class="card">
+          <p class="card-title">Novo lançamento</p>
+          <p class="card-sub">Informe o valor acumulado de vendas de cada vendedor até o dia anterior (RN01). O lançamento de hoje vale para o dia de referência selecionado.</p>
+          <div class="field" style="max-width:220px;margin-bottom:16px;">
+            <label style="font-size:12px;color:var(--ink-soft);font-weight:600;display:block;margin-bottom:6px;">Data de referência (vendas até este dia)</label>
+            <input type="date" id="input-data-lancamento" style="width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;">
+          </div>
+          <table id="tabela-lancamento-form">
+            <thead><tr><th>Vendedor</th><th style="text-align:right;">Valor acumulado (R$)</th></tr></thead>
+            <tbody id="corpo-lancamento-form"></tbody>
+          </table>
+          <div style="margin-top:16px;">
+            <button class="btn btn-gold" id="btn-salvar-lancamento">Salvar lançamento</button>
+            <span id="lancamento-editando-aviso" style="display:none;font-size:12.5px;color:var(--ink-soft);margin-left:12px;">Editando lançamento existente desta data.</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="card-title">Ajustes da filial</p>
+          <p class="card-sub">Créditos ou débitos que impactam o resultado da filial sem serem contabilizados como vendas de vendedores ativos — ex: serviços agregados de ex-colaboradores ou vendas canceladas (RF16, RF17).</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+            <div>
+              <label style="font-size:12px;color:var(--ink-soft);font-weight:600;display:block;margin-bottom:6px;">Tipo</label>
+              <select id="select-tipo-ajuste" style="padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;">
+                <option value="credito">Crédito (soma)</option>
+                <option value="debito">Débito (subtrai)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px;color:var(--ink-soft);font-weight:600;display:block;margin-bottom:6px;">Valor (R$)</label>
+              <input type="number" id="input-valor-ajuste" class="meta-input" style="width:150px;" min="0" step="10">
+            </div>
+            <div style="flex:1;min-width:180px;">
+              <label style="font-size:12px;color:var(--ink-soft);font-weight:600;display:block;margin-bottom:6px;">Descrição</label>
+              <input type="text" id="input-desc-ajuste" style="width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;" placeholder="Ex: venda cancelada de pacote X">
+            </div>
+            <button class="btn btn-gold" id="btn-add-ajuste">Adicionar ajuste</button>
+          </div>
+          <table>
+            <thead><tr><th>Descrição</th><th>Tipo</th><th style="text-align:right;">Valor</th><th></th></tr></thead>
+            <tbody id="corpo-ajustes"></tbody>
+          </table>
+          <div class="empty" id="empty-ajustes" style="display:none;padding:24px;">
+            <p style="margin:0;font-size:13px;">Nenhum ajuste lançado neste período.</p>
+          </div>
+        </div>
+
+        <div class="card" style="padding:0;">
+          <div style="padding:20px 24px 0;">
+            <p class="card-title">Histórico de lançamentos do período</p>
+          </div>
+          <table>
+            <thead><tr><th>Data de referência</th><th>Vendedores lançados</th><th style="text-align:right;"></th></tr></thead>
+            <tbody id="corpo-historico-lancamentos"></tbody>
+          </table>
+          <div class="empty" id="empty-historico" style="display:none;">
+            <p class="display">Nenhum lançamento ainda</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- PÁGINA RANKING ---------- -->
+      <section id="page-ranking" style="display:none;">
+        <div class="page-head">
+          <div>
+            <p class="page-eyebrow">Desempenho</p>
+            <h1 class="page-title">Ranking</h1>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <button class="btn btn-gold" id="btn-gerar-placar">🎫 Gerar Placar do Dia</button>
+            <select class="period-select" id="select-periodo-ranking"></select>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="card-title">Filial — visão geral</p>
+          <div class="stat-row" id="ranking-filial-stats" style="margin-bottom:0;"></div>
+        </div>
+
+        <div class="card" style="padding:0;">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Vendedor</th><th style="text-align:right;">Vendido</th>
+                <th style="text-align:right;">Meta</th><th style="text-align:right;">Atingido</th>
+                <th style="text-align:right;">Falta</th><th style="text-align:right;">Meta diária</th>
+              </tr>
+            </thead>
+            <tbody id="corpo-ranking"></tbody>
+          </table>
+          <div class="empty" id="empty-ranking" style="display:none;">
+            <p class="display">Sem dados suficientes</p>
+            <p style="margin:0;font-size:13px;">Cadastre vendedores, defina metas e lance vendas para ver o ranking.</p>
+          </div>
+        </div>
+
+        <div class="rank-legend">
+          <span class="rank-legend-item"><span class="rank-legend-dot badge-bad"></span> Abaixo de 50%</span>
+          <span class="rank-legend-item"><span class="rank-legend-dot badge-warn"></span> De 50% a 79%</span>
+          <span class="rank-legend-item"><span class="rank-legend-dot badge-ok"></span> De 80% a 99%</span>
+          <span class="rank-legend-item"><span class="rank-legend-dot badge-good"></span> De 100% a 105%</span>
+          <span class="rank-legend-item"><span class="rank-legend-dot badge-excellent"></span> Acima de 105%</span>
+        </div>
+      </section>
+
+      <!-- ---------- PÁGINA DASHBOARD ANUAL ---------- -->
+      <section id="page-dashboard" style="display:none;">
+        <div class="page-head">
+          <div>
+            <p class="page-eyebrow">Visão consolidada</p>
+            <h1 class="page-title">Dashboard anual</h1>
+          </div>
+          <select class="period-select" id="select-ano-dashboard"></select>
+        </div>
+
+        <div class="stat-row" id="dashboard-filial-stats"></div>
+
+        <div class="card" style="padding:0;">
+          <div style="padding:20px 24px 0;"><p class="card-title">Meses do ano</p></div>
+          <table>
+            <thead><tr><th>Mês</th><th style="text-align:right;">Meta</th><th style="text-align:right;">Vendido</th><th style="text-align:right;">Atingido</th></tr></thead>
+            <tbody id="corpo-dashboard-meses"></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="padding:0;">
+          <div style="padding:20px 24px 0;"><p class="card-title">Ranking anual por vendedor</p></div>
+          <table>
+            <thead><tr><th>#</th><th>Vendedor</th><th style="text-align:right;">Meta acumulada</th><th style="text-align:right;">Vendido no ano</th><th style="text-align:right;">Atingido</th></tr></thead>
+            <tbody id="corpo-dashboard-vendedores"></tbody>
+          </table>
+          <div class="empty" id="empty-dashboard" style="display:none;"><p class="display">Sem dados neste ano ainda</p></div>
+        </div>
+      </section>
+
+      <!-- ---------- PÁGINA RELATÓRIOS ---------- -->
+      <section id="page-relatorios" style="display:none;">
+        <div class="page-head">
+          <div>
+            <p class="page-eyebrow">Documentação</p>
+            <h1 class="page-title">Relatórios</h1>
+          </div>
+          <select class="period-select" id="select-periodo-relatorio"></select>
+        </div>
+
+        <div class="card">
+          <p class="card-title">Relatório consolidado da filial</p>
+          <p class="card-sub">Resumo do período selecionado — pronto para copiar ou imprimir.</p>
+          <pre id="relatorio-filial-texto" style="white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--bg);border-radius:8px;padding:16px;line-height:1.7;"></pre>
+          <button class="btn" id="btn-copiar-relatorio-filial">Copiar texto</button>
+        </div>
+
+        <div class="card">
+          <p class="card-title">Relatório diário de ranking</p>
+          <p class="card-sub">Escolha uma data com lançamento registrado para ver o ranking daquele dia específico.</p>
+          <select id="select-data-relatorio" style="padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;margin-bottom:16px;"></select>
+          <pre id="relatorio-diario-texto" style="white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--bg);border-radius:8px;padding:16px;line-height:1.7;"></pre>
+          <button class="btn" id="btn-copiar-relatorio-diario">Copiar texto</button>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- ---------- MODAL VENDEDOR ---------- -->
+<div class="modal-bg" id="modal-vendedor">
+  <div class="modal">
+    <h3 id="modal-vendedor-titulo">Novo vendedor</h3>
+    <div class="field">
+      <label>Nome completo</label>
+      <input type="text" id="input-nome-vendedor" placeholder="Ex: Gláucia Silva">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btn-cancelar-vendedor">Cancelar</button>
+      <button class="btn btn-gold" id="btn-confirmar-vendedor">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- MODAL INATIVAR ---------- -->
+<div class="modal-bg" id="modal-inativar">
+  <div class="modal">
+    <h3>Inativar vendedor</h3>
+    <p style="font-size:13.5px;color:var(--ink-soft);margin-top:-10px;">
+      <b id="nome-inativar"></b> sairá do ranking ativo, mas todo o histórico de metas e vendas será preservado e continuará disponível para consulta.
+    </p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btn-cancelar-inativar">Cancelar</button>
+      <button class="btn btn-gold" style="background:var(--bad);border-color:var(--bad);" id="btn-confirmar-inativar">Inativar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- MODAL FECHAMENTO ---------- -->
+<div class="modal-bg" id="modal-fechamento">
+  <div class="modal">
+    <h3>Fechar este período?</h3>
+    <p style="font-size:13.5px;color:var(--ink-soft);margin-top:-10px;">
+      Depois de fechado, as metas, vendas e ajustes de <b id="periodo-fechando-label"></b> não poderão mais ser alterados ou excluídos (RF37/RNF18). Essa ação não pode ser desfeita pelo sistema.
+    </p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btn-cancelar-fechamento">Cancelar</button>
+      <button class="btn btn-gold" style="background:var(--bad);border-color:var(--bad);" id="btn-confirmar-fechamento">Sim, fechar período</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ---------- TEMPLATE DO PLACAR (fora da tela, capturado em imagem) ---------- -->
+<div id="placar-canvas-wrap">
+  <div class="placar-ticket" id="placar-ticket">
+    <div class="placar-head">
+      <p class="placar-eyebrow">Filial 8340 · CVC Viagens</p>
+      <h2 class="placar-title">Placar do Dia</h2>
+      <div class="placar-date">Emitido em<b id="placar-data-emissao"></b></div>
+    </div>
+    <div class="placar-perf">
+      <div class="placar-perf-item">
+        <p class="placar-perf-label">Meta filial</p>
+        <p class="placar-perf-value" id="placar-meta-filial"></p>
+      </div>
+      <div class="placar-perf-item">
+        <p class="placar-perf-label">Vendido</p>
+        <p class="placar-perf-value gold" id="placar-total-filial"></p>
+      </div>
+      <div class="placar-perf-item">
+        <p class="placar-perf-label">Atingido</p>
+        <p class="placar-perf-value" id="placar-pct-filial"></p>
+      </div>
+    </div>
+    <div class="placar-punch"></div>
+    <div class="placar-body" id="placar-ranking-body"></div>
+    <div class="placar-footer">Contabilização de Vendas · Filial 8340</div>
+  </div>
+</div>
+
+<!-- ---------- MODAL PLACAR ---------- -->
+<div class="modal-bg" id="modal-placar">
+  <div class="modal" style="max-width:520px;text-align:center;">
+    <h3>Placar do Dia gerado 🎉</h3>
+    <img id="placar-preview-img" style="width:100%;border-radius:12px;margin:10px 0 18px;box-shadow:0 8px 24px rgba(16,27,51,.15);">
+    <div class="modal-actions" style="justify-content:center;flex-wrap:wrap;">
+      <button class="btn-cancel" id="btn-fechar-placar">Fechar</button>
+      <button class="btn btn-gold" id="btn-baixar-placar">⬇ Baixar imagem</button>
+      <button class="btn btn-gold" id="btn-compartilhar-placar" style="display:none;">📤 Compartilhar</button>
+    </div>
+    <p style="font-size:12px;color:var(--ink-soft);margin-top:10px;">Baixe a imagem e anexe no WhatsApp ou no e-mail.</p>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIGURAÇÃO FIREBASE
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyBOxegwaiZSWR6KI9l-VACEypN6-vAfRvo",
+  authDomain: "contabilizacao-vendas-8340.firebaseapp.com",
+  projectId: "contabilizacao-vendas-8340",
+  storageBucket: "contabilizacao-vendas-8340.firebasestorage.app",
+  messagingSenderId: "1024080802925",
+  appId: "1:1024080802925:web:3e7b91514091ff6f043b64"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+/* ============================================================
+   UTIL
+   ============================================================ */
+function toast(msg, isErr=false){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isErr ? ' err' : '');
+  t.style.display = 'block';
+  setTimeout(()=> t.style.display='none', 3200);
+}
+function fmtMoney(v){
+  return (v||0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function fmtDate(ts){
+  if(!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('pt-BR');
+}
+function periodoAtual(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+function periodoLabel(id){
+  const [ano, mes] = id.split('-');
+  const nomes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  return `${nomes[parseInt(mes,10)-1]} de ${ano}`;
+}
+function registrarHistorico(colecao, docId, campo, valorAntigo, valorNovo){
+  db.collection('historico').add({
+    colecao, docId, campo,
+    valorAntigo: valorAntigo ?? null,
+    valorNovo: valorNovo ?? null,
+    usuario: auth.currentUser ? auth.currentUser.email : 'desconhecido',
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(()=>{ /* histórico não deve travar a operação principal */ });
+}
+
+/* ============================================================
+   AUTENTICAÇÃO
+   ============================================================ */
+const loginScreen = document.getElementById('login-screen');
+const appScreen = document.getElementById('app');
+const loginError = document.getElementById('login-error');
+const loginNotice = document.getElementById('login-notice');
+
+document.getElementById('login-btn').addEventListener('click', () => {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  loginError.style.display = 'none';
+  if(!email || !password){
+    loginError.textContent = 'Informe e-mail e senha.';
+    loginError.style.display = 'block';
+    return;
+  }
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.textContent = 'Entrando...';
+  auth.signInWithEmailAndPassword(email, password)
+    .catch(err => {
+      loginError.textContent = 'E-mail ou senha inválidos.';
+      loginError.style.display = 'block';
+    })
+    .finally(() => { btn.disabled = false; btn.textContent = 'Entrar'; });
+});
+
+document.getElementById('forgot-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value.trim();
+  loginError.style.display = 'none';
+  loginNotice.style.display = 'none';
+  if(!email){
+    loginError.textContent = 'Digite seu e-mail acima e clique novamente para receber o link de recuperação.';
+    loginError.style.display = 'block';
+    return;
+  }
+  auth.sendPasswordResetEmail(email)
+    .then(() => {
+      loginNotice.textContent = 'Enviamos um link de recuperação para ' + email + '.';
+      loginNotice.style.display = 'block';
+    })
+    .catch(() => {
+      loginError.textContent = 'Não foi possível enviar o e-mail de recuperação. Confira o endereço digitado.';
+      loginError.style.display = 'block';
+    });
+});
+
+document.getElementById('logout-btn').addEventListener('click', () => auth.signOut());
+
+auth.onAuthStateChanged(user => {
+  if(user){
+    loginScreen.style.display = 'none';
+    appScreen.style.display = 'block';
+    document.getElementById('user-email').textContent = user.email;
+    goToPage('vendedores');
+    carregarVendedores();
+  } else {
+    appScreen.style.display = 'none';
+    loginScreen.style.display = 'flex';
+  }
+});
+
+/* ============================================================
+   NAVEGAÇÃO
+   ============================================================ */
+function goToPage(page){
+  document.querySelectorAll('.nav-item[data-page]').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === page);
+  });
+  document.querySelectorAll('main > section').forEach(el => el.style.display = 'none');
+  document.getElementById('page-' + page).style.display = 'block';
+  if(['metas','lancamentos','ranking'].includes(page)) carregarPeriodos();
+  if(page === 'historico') carregarHistoricoGeral();
+  if(page === 'dashboard') carregarSeletorAnos();
+  if(page === 'relatorios') carregarPeriodoRelatorio();
+}
+document.querySelectorAll('.nav-item[data-page]').forEach(el => {
+  el.addEventListener('click', () => goToPage(el.dataset.page));
+});
+
+/* ============================================================
+   VENDEDORES  (RF04, RF05, RF06, RF07, RF08)
+   ============================================================ */
+let vendedoresCache = [];
+
+function carregarVendedores(){
+  db.collection('vendedores').orderBy('nome').onSnapshot(snap => {
+    vendedoresCache = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    renderVendedores();
+    if(periodoDataCache){ renderMetas(); renderLancamentos(); renderRanking(); }
+  }, err => toast('Erro ao carregar vendedores: ' + err.message, true));
+}
+
+function renderVendedores(){
+  const corpo = document.getElementById('corpo-vendedores');
+  const empty = document.getElementById('empty-vendedores');
+  corpo.innerHTML = '';
+  if(vendedoresCache.length === 0){
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  vendedoresCache.forEach(v => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:600;color:var(--navy);">${v.nome}</td>
+      <td>
+        <span class="badge ${v.ativo ? 'badge-ativo' : 'badge-inativo'}">
+          <span class="dot"></span> ${v.ativo ? 'Ativo' : 'Inativo'}
+        </span>
+      </td>
+      <td>${fmtDate(v.criadoEm)}</td>
+      <td style="text-align:right;">
+        <button class="btn-ghost-text" data-edit="${v.id}">Editar</button>
+        ${v.ativo ? `<button class="btn-danger-text" data-inativar="${v.id}">Inativar</button>` : ''}
+      </td>
+    `;
+    corpo.appendChild(tr);
+  });
+  corpo.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => abrirModalVendedor(b.dataset.edit)));
+  corpo.querySelectorAll('[data-inativar]').forEach(b => b.addEventListener('click', () => abrirModalInativar(b.dataset.inativar)));
+}
+
+let vendedorEditandoId = null;
+function abrirModalVendedor(id=null){
+  vendedorEditandoId = id;
+  const titulo = document.getElementById('modal-vendedor-titulo');
+  const input = document.getElementById('input-nome-vendedor');
+  if(id){
+    const v = vendedoresCache.find(x => x.id === id);
+    titulo.textContent = 'Editar vendedor';
+    input.value = v ? v.nome : '';
+  } else {
+    titulo.textContent = 'Novo vendedor';
+    input.value = '';
+  }
+  document.getElementById('modal-vendedor').style.display = 'flex';
+  input.focus();
+}
+document.getElementById('btn-novo-vendedor').addEventListener('click', () => abrirModalVendedor());
+document.getElementById('btn-cancelar-vendedor').addEventListener('click', () => {
+  document.getElementById('modal-vendedor').style.display = 'none';
+});
+document.getElementById('btn-confirmar-vendedor').addEventListener('click', () => {
+  const nome = document.getElementById('input-nome-vendedor').value.trim();
+  if(!nome){ toast('Digite o nome do vendedor.', true); return; }
+
+  if(vendedorEditandoId){
+    const v = vendedoresCache.find(x => x.id === vendedorEditandoId);
+    db.collection('vendedores').doc(vendedorEditandoId).update({ nome })
+      .then(() => {
+        registrarHistorico('vendedores', vendedorEditandoId, 'nome', v ? v.nome : null, nome);
+        toast('Vendedor atualizado.');
+        document.getElementById('modal-vendedor').style.display = 'none';
+      })
+      .catch(err => toast('Erro: ' + err.message, true));
+  } else {
+    db.collection('vendedores').add({
+      nome, ativo: true,
+      criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+    })
+      .then(() => {
+        toast('Vendedor cadastrado.');
+        document.getElementById('modal-vendedor').style.display = 'none';
+      })
+      .catch(err => toast('Erro: ' + err.message, true));
+  }
+});
+
+let vendedorInativandoId = null;
+function abrirModalInativar(id){
+  vendedorInativandoId = id;
+  const v = vendedoresCache.find(x => x.id === id);
+  document.getElementById('nome-inativar').textContent = v ? v.nome : '';
+  document.getElementById('modal-inativar').style.display = 'flex';
+}
+document.getElementById('btn-cancelar-inativar').addEventListener('click', () => {
+  document.getElementById('modal-inativar').style.display = 'none';
+});
+document.getElementById('btn-confirmar-inativar').addEventListener('click', () => {
+  db.collection('vendedores').doc(vendedorInativandoId).update({
+    ativo: false,
+    inativadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  })
+    .then(() => {
+      registrarHistorico('vendedores', vendedorInativandoId, 'ativo', true, false);
+      toast('Vendedor inativado. O histórico foi mantido.');
+      document.getElementById('modal-inativar').style.display = 'none';
+    })
+    .catch(err => toast('Erro: ' + err.message, true));
+});
+
+/* ============================================================
+   METAS  (RF09, RF10, RF11, RF12)
+   ============================================================ */
+let periodoSelecionado = periodoAtual();
+let periodoDataCache = null;
+let lancamentosCache = [];   // ordenado do mais recente para o mais antigo
+let ajustesCache = [];
+const PERIOD_SELECT_IDS = ['select-periodo','select-periodo-lanc','select-periodo-ranking'];
+
+function carregarPeriodos(){
+  const opcoes = new Set([periodoAtual()]);
+  // Gera os últimos 12 meses como opções de navegação, mesmo sem dados ainda.
+  const d = new Date();
+  for(let i=0;i<12;i++){
+    const dd = new Date(d.getFullYear(), d.getMonth()-i, 1);
+    opcoes.add(`${dd.getFullYear()}-${String(dd.getMonth()+1).padStart(2,'0')}`);
+  }
+  const lista = Array.from(opcoes).sort().reverse();
+  PERIOD_SELECT_IDS.forEach(id => {
+    const select = document.getElementById(id);
+    if(!select) return;
+    select.innerHTML = lista.map(pid => `<option value="${pid}">${periodoLabel(pid)}</option>`).join('');
+    select.value = periodoSelecionado;
+  });
+  carregarDadosPeriodo(periodoSelecionado);
+}
+PERIOD_SELECT_IDS.forEach(id => {
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('change', (e) => {
+    periodoSelecionado = e.target.value;
+    PERIOD_SELECT_IDS.forEach(i2 => { const s = document.getElementById(i2); if(s) s.value = periodoSelecionado; });
+    carregarDadosPeriodo(periodoSelecionado);
+  });
+});
+
+function carregarDadosPeriodo(id){
+  const periodoDoc = db.collection('periodos').doc(id).get();
+  const lancDocs = db.collection('periodos').doc(id).collection('lancamentos').get();
+  const ajusteDocs = db.collection('periodos').doc(id).collection('ajustes').get();
+
+  Promise.all([periodoDoc, lancDocs, ajusteDocs]).then(([pDoc, lSnap, aSnap]) => {
+    periodoDataCache = pDoc.exists ? pDoc.data() : { metaFilial: 0, metasIndividuais: {}, status: 'aberto' };
+    lancamentosCache = lSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => b.id.localeCompare(a.id));
+    ajustesCache = aSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderMetas();
+    renderLancamentos();
+    renderRanking();
+  }).catch(err => toast('Erro ao carregar período: ' + err.message, true));
+}
+
+/* ---------- helpers de cálculo compartilhados ---------- */
+function ultimoValorVendedor(vendedorId){
+  for(const l of lancamentosCache){
+    if(l.valores && l.valores[vendedorId] !== undefined) return l.valores[vendedorId];
+  }
+  return 0;
+}
+function totalAjustes(){
+  return ajustesCache.reduce((acc,a) => acc + (a.tipo === 'debito' ? -a.valor : a.valor), 0);
+}
+function diasRestantesNoMes(periodoId){
+  const [ano, mes] = periodoId.split('-').map(Number);
+  const hoje = new Date();
+  const ultimoDiaMes = new Date(ano, mes, 0).getDate();
+  if(periodoId === periodoAtual()){
+    return Math.max(ultimoDiaMes - hoje.getDate() + 1, 1);
+  }
+  // período futuro: considera o mês inteiro; período passado (fechado): não se aplica.
+  return periodoId > periodoAtual() ? ultimoDiaMes : 0;
+}
+function tierInfo(pct){
+  if(pct >= 105) return {label:'Excelente', cls:'badge-excellent'};
+  if(pct >= 100) return {label:'Na meta', cls:'badge-good'};
+  if(pct >= 80)  return {label:'Bom ritmo', cls:'badge-ok'};
+  if(pct >= 50)  return {label:'Atenção', cls:'badge-warn'};
+  return {label:'Abaixo', cls:'badge-bad'};
+}
+
+function renderMetas(){
+  const fechado = periodoDataCache.status === 'fechado';
+  document.getElementById('lock-note').style.display = fechado ? 'flex' : 'none';
+
+  const inputFilial = document.getElementById('input-meta-filial');
+  inputFilial.value = periodoDataCache.metaFilial || '';
+  inputFilial.disabled = fechado;
+  document.getElementById('btn-salvar-meta-filial').disabled = fechado;
+  document.getElementById('btn-salvar-meta-filial').style.opacity = fechado ? .5 : 1;
+
+  const ativos = vendedoresCache.filter(v => v.ativo);
+  const metaFilial = periodoDataCache.metaFilial || 0;
+  const metasIndiv = periodoDataCache.metasIndividuais || {};
+  const metaAutomatica = ativos.length ? metaFilial / ativos.length : 0;
+
+  // stats
+  const totalDistribuido = ativos.reduce((acc, v) => acc + (metasIndiv[v.id] ?? metaAutomatica), 0);
+  document.getElementById('metas-stats').innerHTML = `
+    <div class="stat"><p class="stat-label">Meta da filial</p><p class="stat-value num">R$ ${fmtMoney(metaFilial)}</p></div>
+    <div class="stat"><p class="stat-label">Vendedores ativos</p><p class="stat-value num">${ativos.length}</p></div>
+    <div class="stat"><p class="stat-label">Meta automática / vendedor</p><p class="stat-value num gold">R$ ${fmtMoney(metaAutomatica)}</p></div>
+    <div class="stat"><p class="stat-label">Total distribuído</p><p class="stat-value num">R$ ${fmtMoney(totalDistribuido)}</p></div>
+  `;
+
+  document.getElementById('btn-abrir-fechamento').style.display = fechado ? 'none' : 'inline-block';
+  document.getElementById('fechamento-texto').textContent = fechado
+    ? `Período fechado em ${fmtDate(periodoDataCache.fechadoEm)}. Todos os dados deste mês estão bloqueados para alteração.`
+    : 'Ao fechar o mês, os dados de metas, vendas e ajustes deste período ficam bloqueados para alteração ou exclusão (RF37). Um novo período é aberto automaticamente ao selecionar o próximo mês.';
+
+
+  const corpo = document.getElementById('corpo-metas');
+  const empty = document.getElementById('empty-metas');
+  corpo.innerHTML = '';
+  if(ativos.length === 0){
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  ativos.forEach(v => {
+    const valor = metasIndiv[v.id] ?? metaAutomatica;
+    const foiAjustada = metasIndiv.hasOwnProperty(v.id);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:600;color:var(--navy);">${v.nome}</td>
+      <td style="text-align:right;">
+        <input type="number" class="meta-input num" data-vendedor="${v.id}" value="${valor.toFixed(2)}" step="50" min="0" ${fechado ? 'disabled' : ''}>
+      </td>
+      <td style="width:130px;">${foiAjustada ? '<span class="badge" style="background:var(--ok-bg);color:var(--ok);">Ajustada</span>' : '<span class="badge badge-inativo">Automática</span>'}</td>
+    `;
+    corpo.appendChild(tr);
+  });
+
+  corpo.querySelectorAll('.meta-input').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const vendedorId = inp.dataset.vendedor;
+      const novoValor = parseFloat(inp.value) || 0;
+      const antigo = (periodoDataCache.metasIndividuais || {})[vendedorId] ?? metaAutomatica;
+      const path = `metasIndividuais.${vendedorId}`;
+      db.collection('periodos').doc(periodoSelecionado).set({
+        metasIndividuais: { [vendedorId]: novoValor },
+        status: periodoDataCache.status || 'aberto'
+      }, { merge: true }).then(() => {
+        registrarHistorico('periodos', periodoSelecionado, `metaIndividual:${vendedorId}`, antigo, novoValor);
+        periodoDataCache.metasIndividuais = periodoDataCache.metasIndividuais || {};
+        periodoDataCache.metasIndividuais[vendedorId] = novoValor;
+        renderMetas();
+        toast('Meta individual ajustada.');
+      }).catch(err => toast('Erro: ' + err.message, true));
+    });
+  });
+}
+
+document.getElementById('btn-salvar-meta-filial').addEventListener('click', () => {
+  const valor = parseFloat(document.getElementById('input-meta-filial').value) || 0;
+  const antigo = periodoDataCache.metaFilial || 0;
+  db.collection('periodos').doc(periodoSelecionado).set({
+    metaFilial: valor,
+    status: periodoDataCache.status || 'aberto'
+  }, { merge: true }).then(() => {
+    registrarHistorico('periodos', periodoSelecionado, 'metaFilial', antigo, valor);
+    periodoDataCache.metaFilial = valor;
+    renderMetas();
+    toast('Meta da filial salva. As metas individuais foram recalculadas.');
+  }).catch(err => toast('Erro: ' + err.message, true));
+});
+
+/* ============================================================
+   LANÇAMENTO DE VENDAS  (RF13, RF14, RF15, RN01)
+   ============================================================ */
+function ontemISO(){
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0,10);
+}
+document.getElementById('input-data-lancamento').value = ontemISO();
+
+function renderLancamentos(){
+  const fechado = periodoDataCache.status === 'fechado';
+  document.getElementById('lock-note-lanc').style.display = fechado ? 'flex' : 'none';
+  document.getElementById('btn-salvar-lancamento').disabled = fechado;
+  document.getElementById('btn-salvar-lancamento').style.opacity = fechado ? .5 : 1;
+  document.getElementById('input-data-lancamento').disabled = fechado;
+
+  renderFormLancamento();
+  renderAjustes();
+  renderHistoricoLancamentos();
+}
+
+function renderFormLancamento(){
+  const ativos = vendedoresCache.filter(v => v.ativo);
+  const corpo = document.getElementById('corpo-lancamento-form');
+  const dataRef = document.getElementById('input-data-lancamento').value;
+  const existente = lancamentosCache.find(l => l.id === dataRef);
+  document.getElementById('lancamento-editando-aviso').style.display = existente ? 'inline' : 'none';
+
+  corpo.innerHTML = '';
+  ativos.forEach(v => {
+    const valorAtual = existente && existente.valores && existente.valores[v.id] !== undefined
+      ? existente.valores[v.id] : ultimoValorVendedor(v.id);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:600;color:var(--navy);">${v.nome}</td>
+      <td style="text-align:right;">
+        <input type="number" class="meta-input num" data-lanc-vendedor="${v.id}" value="${valorAtual}" step="10" min="0" ${periodoDataCache.status==='fechado' ? 'disabled' : ''}>
+      </td>
+    `;
+    corpo.appendChild(tr);
+  });
+}
+document.getElementById('input-data-lancamento').addEventListener('change', renderFormLancamento);
+
+document.getElementById('btn-salvar-lancamento').addEventListener('click', () => {
+  const dataRef = document.getElementById('input-data-lancamento').value;
+  if(!dataRef){ toast('Escolha a data de referência.', true); return; }
+  const valores = {};
+  document.querySelectorAll('[data-lanc-vendedor]').forEach(inp => {
+    valores[inp.dataset.lancVendedor] = parseFloat(inp.value) || 0;
+  });
+  db.collection('periodos').doc(periodoSelecionado).collection('lancamentos').doc(dataRef).set({
+    valores,
+    referenteA: dataRef,
+    lancadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true }).then(() => {
+    registrarHistorico('lancamentos', `${periodoSelecionado}/${dataRef}`, 'valores', null, valores);
+    toast('Lançamento salvo. Ranking atualizado.');
+    carregarDadosPeriodo(periodoSelecionado);
+  }).catch(err => toast('Erro: ' + err.message, true));
+});
+
+function renderHistoricoLancamentos(){
+  const corpo = document.getElementById('corpo-historico-lancamentos');
+  const empty = document.getElementById('empty-historico');
+  corpo.innerHTML = '';
+  if(lancamentosCache.length === 0){ empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  lancamentosCache.forEach(l => {
+    const qtd = l.valores ? Object.keys(l.valores).length : 0;
+    const [ano,mes,dia] = l.id.split('-');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="num">${dia}/${mes}/${ano}</td>
+      <td>${qtd} vendedor(es)</td>
+      <td style="text-align:right;">
+        <button class="btn-ghost-text" data-editar-lanc="${l.id}" ${periodoDataCache.status==='fechado' ? 'disabled style="opacity:.4;text-decoration:none;"' : ''}>Editar</button>
+      </td>
+    `;
+    corpo.appendChild(tr);
+  });
+  corpo.querySelectorAll('[data-editar-lanc]').forEach(b => b.addEventListener('click', () => {
+    document.getElementById('input-data-lancamento').value = b.dataset.editarLanc;
+    renderFormLancamento();
+    window.scrollTo({top:0, behavior:'smooth'});
+  }));
+}
+
+/* ---------- Ajustes da filial (RF16, RF17) ---------- */
+function renderAjustes(){
+  const corpo = document.getElementById('corpo-ajustes');
+  const empty = document.getElementById('empty-ajustes');
+  const fechado = periodoDataCache.status === 'fechado';
+  corpo.innerHTML = '';
+  if(ajustesCache.length === 0){ empty.style.display = 'block'; }
+  else {
+    empty.style.display = 'none';
+    ajustesCache.forEach(a => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${a.descricao || '—'}</td>
+        <td><span class="badge ${a.tipo === 'debito' ? 'badge-bad' : 'badge-good'}">${a.tipo === 'debito' ? 'Débito' : 'Crédito'}</span></td>
+        <td style="text-align:right;" class="num">${a.tipo === 'debito' ? '−' : '+'} R$ ${fmtMoney(a.valor)}</td>
+        <td style="text-align:right;">${fechado ? '' : `<button class="icon-btn-del" data-del-ajuste="${a.id}" title="Remover">✕</button>`}</td>
+      `;
+      corpo.appendChild(tr);
+    });
+  }
+  corpo.querySelectorAll('[data-del-ajuste]').forEach(b => b.addEventListener('click', () => {
+    const a = ajustesCache.find(x => x.id === b.dataset.delAjuste);
+    db.collection('periodos').doc(periodoSelecionado).collection('ajustes').doc(b.dataset.delAjuste).delete()
+      .then(() => {
+        registrarHistorico('ajustes', `${periodoSelecionado}`, 'ajusteRemovido', a ? `${a.descricao} — R$ ${fmtMoney(a.valor)}` : null, null);
+        toast('Ajuste removido.'); carregarDadosPeriodo(periodoSelecionado);
+      })
+      .catch(err => toast('Erro: ' + err.message, true));
+  }));
+  document.getElementById('btn-add-ajuste').disabled = fechado;
+  document.getElementById('btn-add-ajuste').style.opacity = fechado ? .5 : 1;
+}
+
+document.getElementById('btn-add-ajuste').addEventListener('click', () => {
+  const tipo = document.getElementById('select-tipo-ajuste').value;
+  const valor = parseFloat(document.getElementById('input-valor-ajuste').value) || 0;
+  const descricao = document.getElementById('input-desc-ajuste').value.trim();
+  if(valor <= 0){ toast('Informe um valor válido.', true); return; }
+  if(!descricao){ toast('Descreva o motivo do ajuste.', true); return; }
+  db.collection('periodos').doc(periodoSelecionado).collection('ajustes').add({
+    tipo, valor, descricao,
+    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    registrarHistorico('ajustes', `${periodoSelecionado}`, `novoAjuste:${tipo}`, null, `${descricao} — R$ ${fmtMoney(valor)}`);
+    toast('Ajuste registrado.');
+    document.getElementById('input-valor-ajuste').value = '';
+    document.getElementById('input-desc-ajuste').value = '';
+    carregarDadosPeriodo(periodoSelecionado);
+  }).catch(err => toast('Erro: ' + err.message, true));
+});
+
+/* ============================================================
+   RANKING  (RF18–RF26, RF33)
+   ============================================================ */
+function renderRanking(){
+  const ativos = vendedoresCache.filter(v => v.ativo);
+  const metaFilial = periodoDataCache.metaFilial || 0;
+  const metasIndiv = periodoDataCache.metasIndividuais || {};
+  const metaAutomatica = ativos.length ? metaFilial / ativos.length : 0;
+  const diasRestantes = diasRestantesNoMes(periodoSelecionado);
+
+  const linhas = ativos.map(v => {
+    const totalVendido = ultimoValorVendedor(v.id);
+    const metaIndividual = metasIndiv[v.id] ?? metaAutomatica;
+    const pct = metaIndividual > 0 ? (totalVendido / metaIndividual) * 100 : 0;
+    const restante = metaIndividual - totalVendido;
+    const metaDiaria = diasRestantes > 0 ? Math.max(restante,0) / diasRestantes : 0;
+    return { vendedor: v, totalVendido, metaIndividual, pct, restante, metaDiaria };
+  }).sort((a,b) => b.pct - a.pct);
+
+  const corpo = document.getElementById('corpo-ranking');
+  const empty = document.getElementById('empty-ranking');
+  corpo.innerHTML = '';
+  if(linhas.length === 0){ empty.style.display = 'block'; }
+  else {
+    empty.style.display = 'none';
+    linhas.forEach((l, idx) => {
+      const tier = tierInfo(l.pct);
+      const iniciais = l.vendedor.nome.trim().split(/\s+/).slice(0,2).map(p => p[0]).join('').toUpperCase();
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="rank-pos ${idx===0 ? 'top':''}">${idx+1}º</td>
+        <td><span class="vendedor-nome"><span class="vendedor-avatar">${iniciais}</span>${l.vendedor.nome}</span></td>
+        <td style="text-align:right;" class="num valor-destaque">R$ ${fmtMoney(l.totalVendido)}</td>
+        <td style="text-align:right;" class="num">R$ ${fmtMoney(l.metaIndividual)}</td>
+        <td style="text-align:right;"><span class="badge ${tier.cls}">${l.pct.toFixed(1)}%</span></td>
+        <td style="text-align:right;" class="num ${l.restante > 0 ? 'valor-falta' : ''}">${l.restante > 0 ? 'R$ ' + fmtMoney(l.restante) : '—'}</td>
+        <td style="text-align:right;" class="num valor-destaque">${l.restante > 0 && diasRestantes > 0 ? 'R$ ' + fmtMoney(l.metaDiaria) : '—'}</td>
+      `;
+      corpo.appendChild(tr);
+    });
+  }
+
+  const totalFilial = ativos.reduce((acc,v) => acc + ultimoValorVendedor(v.id), 0) + totalAjustes();
+  const pctFilial = metaFilial > 0 ? (totalFilial / metaFilial) * 100 : 0;
+  const restanteFilial = metaFilial - totalFilial;
+  const metaDiariaFilial = diasRestantes > 0 ? Math.max(restanteFilial,0) / diasRestantes : 0;
+  const tierFilial = tierInfo(pctFilial);
+
+  document.getElementById('ranking-filial-stats').innerHTML = `
+    <div class="stat"><p class="stat-label">Meta filial</p><p class="stat-value num">R$ ${fmtMoney(metaFilial)}</p></div>
+    <div class="stat"><p class="stat-label">Total vendido (com ajustes)</p><p class="stat-value num">R$ ${fmtMoney(totalFilial)}</p></div>
+    <div class="stat"><p class="stat-label">Atingido</p><p class="stat-value"><span class="badge ${tierFilial.cls}">${pctFilial.toFixed(1)}% · ${tierFilial.label}</span></p></div>
+    <div class="stat"><p class="stat-label">Falta para 100%</p><p class="stat-value num">${restanteFilial > 0 ? 'R$ ' + fmtMoney(restanteFilial) : 'Meta atingida'}</p></div>
+    <div class="stat"><p class="stat-label">Meta diária da filial</p><p class="stat-value num gold">${restanteFilial > 0 && diasRestantes > 0 ? 'R$ ' + fmtMoney(metaDiariaFilial) : '—'}</p></div>
+  `;
+}
+
+/* ---------- Fechamento mensal (RF36, RF37, RNF18) ---------- */
+document.getElementById('btn-abrir-fechamento').addEventListener('click', () => {
+  document.getElementById('periodo-fechando-label').textContent = periodoLabel(periodoSelecionado);
+  document.getElementById('modal-fechamento').style.display = 'flex';
+});
+document.getElementById('btn-cancelar-fechamento').addEventListener('click', () => {
+  document.getElementById('modal-fechamento').style.display = 'none';
+});
+document.getElementById('btn-confirmar-fechamento').addEventListener('click', () => {
+  db.collection('periodos').doc(periodoSelecionado).set({
+    status: 'fechado',
+    fechadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true }).then(() => {
+    registrarHistorico('periodos', periodoSelecionado, 'status', 'aberto', 'fechado');
+    toast('Período fechado. Os dados deste mês estão bloqueados.');
+    document.getElementById('modal-fechamento').style.display = 'none';
+    carregarDadosPeriodo(periodoSelecionado);
+  }).catch(err => toast('Erro: ' + err.message, true));
+});
+
+/* ============================================================
+   HISTÓRICO / AUDITORIA  (RF39, RF40, RNF17)
+   ============================================================ */
+function linhaHistoricoHTML(h){
+  const de = typeof h.valorAntigo === 'object' ? JSON.stringify(h.valorAntigo) : (h.valorAntigo ?? '—');
+  const para = typeof h.valorNovo === 'object' ? JSON.stringify(h.valorNovo) : (h.valorNovo ?? '—');
+  return `
+    <td class="num">${h.timestamp ? h.timestamp.toDate().toLocaleString('pt-BR') : '—'}</td>
+    <td>${h.usuario || '—'}</td>
+    <td>${h.colecao}${h.docId ? ' · ' + h.docId : ''}</td>
+    <td>${h.campo || '—'}</td>
+    <td class="num" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${de}</td>
+    <td class="num" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${para}</td>
+  `;
+}
+function preencherHistorico(docsData){
+  const corpo = document.getElementById('corpo-historico');
+  const empty = document.getElementById('empty-historico-geral');
+  corpo.innerHTML = '';
+  if(docsData.length === 0){ empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  docsData.forEach(h => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = linhaHistoricoHTML(h);
+    corpo.appendChild(tr);
+  });
+}
+function carregarHistoricoGeral(){
+  db.collection('historico').orderBy('timestamp', 'desc').limit(100).get().then(snap => {
+    preencherHistorico(snap.docs.map(d => d.data()));
+  }).catch(() => {
+    // Sem índice disponível para orderBy: busca tudo e ordena no cliente.
+    db.collection('historico').get().then(snap => {
+      const docs = snap.docs.map(d => d.data()).sort((a,b) => {
+        const ta = a.timestamp ? a.timestamp.toMillis() : 0;
+        const tb = b.timestamp ? b.timestamp.toMillis() : 0;
+        return tb - ta;
+      }).slice(0,100);
+      preencherHistorico(docs);
+    });
+  });
+}
+
+/* ============================================================
+   PLACAR DO DIA  (RF34, RF35)
+   ============================================================ */
+document.getElementById('btn-gerar-placar').addEventListener('click', () => {
+  const ativos = vendedoresCache.filter(v => v.ativo);
+  const metaFilial = periodoDataCache.metaFilial || 0;
+  const metasIndiv = periodoDataCache.metasIndividuais || {};
+  const metaAutomatica = ativos.length ? metaFilial / ativos.length : 0;
+  const totalFilial = ativos.reduce((acc,v) => acc + ultimoValorVendedor(v.id), 0) + totalAjustes();
+  const pctFilial = metaFilial > 0 ? (totalFilial / metaFilial) * 100 : 0;
+
+  const diasRestantes = diasRestantesNoMes(periodoSelecionado);
+  const linhas = ativos.map(v => {
+    const totalVendido = ultimoValorVendedor(v.id);
+    const metaIndividual = metasIndiv[v.id] ?? metaAutomatica;
+    const pct = metaIndividual > 0 ? (totalVendido / metaIndividual) * 100 : 0;
+    const restante = metaIndividual - totalVendido;
+    const metaDiaria = diasRestantes > 0 ? Math.max(restante,0) / diasRestantes : 0;
+    return { nome: v.nome, totalVendido, metaIndividual, pct, restante, metaDiaria };
+  }).sort((a,b) => b.pct - a.pct);
+
+  document.getElementById('placar-data-emissao').textContent = new Date().toLocaleDateString('pt-BR');
+  document.getElementById('placar-meta-filial').textContent = 'R$ ' + fmtMoney(metaFilial);
+  document.getElementById('placar-total-filial').textContent = 'R$ ' + fmtMoney(totalFilial);
+  document.getElementById('placar-pct-filial').textContent = pctFilial.toFixed(1) + '%';
+
+  const corpo = document.getElementById('placar-ranking-body');
+  corpo.innerHTML = linhas.map((l, idx) => {
+    const medalCls = idx===0 ? 'm1' : idx===1 ? 'm2' : idx===2 ? 'm3' : 'mn';
+    const medalTxt = idx < 3 ? ['🥇','🥈','🥉'][idx] : (idx+1)+'º';
+    const cor = l.pct >= 105 ? '#8A6A1E' : l.pct >= 100 ? '#2F7D5C' : l.pct >= 80 ? '#3E7CB1' : l.pct >= 50 ? '#B7791F' : '#A5322F';
+    return `<div class="placar-rank-row">
+      <div class="placar-rank-top">
+        <div class="placar-medal ${medalCls}">${medalTxt}</div>
+        <div class="placar-rank-name">${l.nome}</div>
+        <div class="placar-stat-mini-value" style="color:${cor};font-size:16px;">${l.pct.toFixed(1)}%</div>
+      </div>
+      <div class="placar-rank-stats">
+        <div><p class="placar-stat-mini-label">Meta</p><p class="placar-stat-mini-value">R$ ${fmtMoney(l.metaIndividual)}</p></div>
+        <div><p class="placar-stat-mini-label">Vendido</p><p class="placar-stat-mini-value">R$ ${fmtMoney(l.totalVendido)}</p></div>
+        <div><p class="placar-stat-mini-label">Atingido</p><p class="placar-stat-mini-value" style="color:${cor};">${l.pct.toFixed(1)}%</p></div>
+        <div><p class="placar-stat-mini-label">Meta diária</p><p class="placar-stat-mini-value">${l.restante > 0 && diasRestantes > 0 ? 'R$ ' + fmtMoney(l.metaDiaria) : '—'}</p></div>
+      </div>
+    </div>`;
+  }).join('') || '<p style="color:var(--ink-soft);text-align:center;padding:10px;">Nenhum vendedor ativo</p>';
+
+  toast('Gerando imagem do placar...');
+  html2canvas(document.getElementById('placar-ticket'), { scale: 2, backgroundColor: null }).then(canvas => {
+    const dataUrl = canvas.toDataURL('image/png');
+    document.getElementById('placar-preview-img').src = dataUrl;
+    document.getElementById('modal-placar').style.display = 'flex';
+
+    const btnCompartilhar = document.getElementById('btn-compartilhar-placar');
+    if(navigator.share && navigator.canShare){
+      canvas.toBlob(blob => {
+        const file = new File([blob], `placar-do-dia-${periodoSelecionado}.png`, { type: 'image/png' });
+        if(navigator.canShare({ files: [file] })){
+          btnCompartilhar.style.display = 'inline-block';
+          btnCompartilhar.onclick = () => {
+            navigator.share({ files: [file], title: 'Placar do Dia — Filial 8340' }).catch(()=>{});
+          };
+        }
+      });
+    }
+  });
+});
+document.getElementById('btn-fechar-placar').addEventListener('click', () => {
+  document.getElementById('modal-placar').style.display = 'none';
+});
+document.getElementById('btn-baixar-placar').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = document.getElementById('placar-preview-img').src;
+  a.download = `placar-do-dia-${periodoSelecionado}-${new Date().toISOString().slice(0,10)}.png`;
+  a.click();
+});
+
+/* ============================================================
+   DASHBOARD ANUAL  (RF27–RF30)
+   ============================================================ */
+function carregarSeletorAnos(){
+  const select = document.getElementById('select-ano-dashboard');
+  const anoAtual = new Date().getFullYear();
+  const anos = [anoAtual, anoAtual-1, anoAtual-2];
+  select.innerHTML = anos.map(a => `<option value="${a}">${a}</option>`).join('');
+  select.value = anoAtual;
+  carregarDashboardAnual(anoAtual);
+}
+document.getElementById('select-ano-dashboard').addEventListener('change', (e) => {
+  carregarDashboardAnual(parseInt(e.target.value,10));
+});
+
+async function carregarDashboardAnual(ano){
+  const nomesMeses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const dadosMeses = [];
+  const acumuladoPorVendedor = {}; // vendedorId -> {meta, vendido}
+  let metaAnoTotal = 0, vendidoAnoTotal = 0;
+
+  for(let m=1;m<=12;m++){
+    const id = `${ano}-${String(m).padStart(2,'0')}`;
+    const pDoc = await db.collection('periodos').doc(id).get();
+    if(!pDoc.exists){ dadosMeses.push({mes:nomesMeses[m-1], meta:0, vendido:0, pct:0, existe:false}); continue; }
+    const pData = pDoc.data();
+    const lSnap = await db.collection('periodos').doc(id).collection('lancamentos').get();
+    const aSnap = await db.collection('periodos').doc(id).collection('ajustes').get();
+    const lancs = lSnap.docs.map(d => ({id:d.id, ...d.data()})).sort((a,b) => b.id.localeCompare(a.id));
+    const ajustesSoma = aSnap.docs.reduce((acc,d) => {
+      const a = d.data();
+      return acc + (a.tipo === 'debito' ? -a.valor : a.valor);
+    }, 0);
+
+    const ativosNoMes = vendedoresCache.filter(v => v.ativo); // aproximação: equipe ativa atual
+    const metaAutomatica = ativosNoMes.length ? (pData.metaFilial||0) / ativosNoMes.length : 0;
+    let vendidoMes = 0;
+    ativosNoMes.forEach(v => {
+      let val = 0;
+      for(const l of lancs){ if(l.valores && l.valores[v.id] !== undefined){ val = l.valores[v.id]; break; } }
+      vendidoMes += val;
+      const metaInd = (pData.metasIndividuais || {})[v.id] ?? metaAutomatica;
+      if(!acumuladoPorVendedor[v.id]) acumuladoPorVendedor[v.id] = { nome: v.nome, meta: 0, vendido: 0 };
+      acumuladoPorVendedor[v.id].meta += metaInd;
+      acumuladoPorVendedor[v.id].vendido += val;
+    });
+    vendidoMes += ajustesSoma;
+    const metaMes = pData.metaFilial || 0;
+    metaAnoTotal += metaMes;
+    vendidoAnoTotal += vendidoMes;
+    dadosMeses.push({ mes: nomesMeses[m-1], meta: metaMes, vendido: vendidoMes, pct: metaMes>0 ? vendidoMes/metaMes*100 : 0, existe: true });
+  }
+
+  const pctAno = metaAnoTotal > 0 ? (vendidoAnoTotal/metaAnoTotal*100) : 0;
+  const tierAno = tierInfo(pctAno);
+  document.getElementById('dashboard-filial-stats').innerHTML = `
+    <div class="stat"><p class="stat-label">Meta total do ano</p><p class="stat-value num">R$ ${fmtMoney(metaAnoTotal)}</p></div>
+    <div class="stat"><p class="stat-label">Vendido no ano</p><p class="stat-value num">R$ ${fmtMoney(vendidoAnoTotal)}</p></div>
+    <div class="stat"><p class="stat-label">Percentual anual</p><p class="stat-value"><span class="badge ${tierAno.cls}">${pctAno.toFixed(1)}% · ${tierAno.label}</span></p></div>
+  `;
+
+  document.getElementById('corpo-dashboard-meses').innerHTML = dadosMeses.map(d => {
+    if(!d.existe) return `<tr><td>${d.mes}</td><td colspan="3" style="color:var(--ink-soft);">Sem dados</td></tr>`;
+    const tier = tierInfo(d.pct);
+    return `<tr>
+      <td style="font-weight:600;">${d.mes}</td>
+      <td style="text-align:right;" class="num">R$ ${fmtMoney(d.meta)}</td>
+      <td style="text-align:right;" class="num">R$ ${fmtMoney(d.vendido)}</td>
+      <td style="text-align:right;"><span class="badge ${tier.cls}">${d.pct.toFixed(1)}%</span></td>
+    </tr>`;
+  }).join('');
+
+  const vendedoresAno = Object.values(acumuladoPorVendedor).map(v => ({
+    ...v, pct: v.meta>0 ? v.vendido/v.meta*100 : 0
+  })).sort((a,b) => b.pct - a.pct);
+
+  const corpoV = document.getElementById('corpo-dashboard-vendedores');
+  const emptyV = document.getElementById('empty-dashboard');
+  if(vendedoresAno.length === 0){ emptyV.style.display = 'block'; corpoV.innerHTML = ''; }
+  else {
+    emptyV.style.display = 'none';
+    corpoV.innerHTML = vendedoresAno.map((v, idx) => {
+      const tier = tierInfo(v.pct);
+      return `<tr>
+        <td class="rank-pos ${idx===0?'top':''}">${idx+1}º</td>
+        <td style="font-weight:600;">${v.nome}</td>
+        <td style="text-align:right;" class="num">R$ ${fmtMoney(v.meta)}</td>
+        <td style="text-align:right;" class="num">R$ ${fmtMoney(v.vendido)}</td>
+        <td style="text-align:right;"><span class="badge ${tier.cls}">${v.pct.toFixed(1)}%</span></td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+/* ============================================================
+   RELATÓRIOS  (RF31, RF32, RF33)
+   ============================================================ */
+function carregarPeriodoRelatorio(){
+  const select = document.getElementById('select-periodo-relatorio');
+  const opcoes = new Set([periodoAtual()]);
+  const d = new Date();
+  for(let i=0;i<12;i++){
+    const dd = new Date(d.getFullYear(), d.getMonth()-i, 1);
+    opcoes.add(`${dd.getFullYear()}-${String(dd.getMonth()+1).padStart(2,'0')}`);
+  }
+  const lista = Array.from(opcoes).sort().reverse();
+  select.innerHTML = lista.map(id => `<option value="${id}">${periodoLabel(id)}</option>`).join('');
+  select.value = periodoSelecionado;
+  select.onchange = () => carregarDadosRelatorio(select.value);
+  carregarDadosRelatorio(select.value);
+}
+
+function carregarDadosRelatorio(id){
+  Promise.all([
+    db.collection('periodos').doc(id).get(),
+    db.collection('periodos').doc(id).collection('lancamentos').get(),
+    db.collection('periodos').doc(id).collection('ajustes').get()
+  ]).then(([pDoc, lSnap, aSnap]) => {
+    const pData = pDoc.exists ? pDoc.data() : { metaFilial:0, metasIndividuais:{}, status:'aberto' };
+    const lancs = lSnap.docs.map(d => ({id:d.id, ...d.data()})).sort((a,b) => b.id.localeCompare(a.id));
+    const ajustes = aSnap.docs.map(d => d.data());
+
+    renderRelatorioFilial(id, pData, lancs, ajustes);
+
+    const selectData = document.getElementById('select-data-relatorio');
+    selectData.innerHTML = lancs.map(l => {
+      const [ano,mes,dia] = l.id.split('-');
+      return `<option value="${l.id}">${dia}/${mes}/${ano}</option>`;
+    }).join('') || '<option value="">Nenhum lançamento neste período</option>';
+    selectData.onchange = () => renderRelatorioDiario(id, pData, lancs, selectData.value);
+    if(lancs.length) renderRelatorioDiario(id, pData, lancs, lancs[0].id);
+    else document.getElementById('relatorio-diario-texto').textContent = 'Nenhum lançamento registrado neste período ainda.';
+  });
+}
+
+function renderRelatorioFilial(id, pData, lancs, ajustes){
+  const ativos = vendedoresCache.filter(v => v.ativo);
+  const metaAutomatica = ativos.length ? (pData.metaFilial||0) / ativos.length : 0;
+  const ajustesSoma = ajustes.reduce((acc,a) => acc + (a.tipo === 'debito' ? -a.valor : a.valor), 0);
+  let totalFilial = ajustesSoma;
+  let linhas = '';
+  ativos.forEach(v => {
+    let val = 0;
+    for(const l of lancs){ if(l.valores && l.valores[v.id] !== undefined){ val = l.valores[v.id]; break; } }
+    totalFilial += val;
+    const metaInd = (pData.metasIndividuais||{})[v.id] ?? metaAutomatica;
+    const pct = metaInd>0 ? val/metaInd*100 : 0;
+    linhas += `  ${v.nome.padEnd(24,' ')} R$ ${fmtMoney(val).padStart(14,' ')}   ${pct.toFixed(1)}%\n`;
+  });
+  const pctFilial = pData.metaFilial>0 ? totalFilial/pData.metaFilial*100 : 0;
+  const texto =
+`RELATÓRIO CONSOLIDADO — FILIAL 8340
+Período: ${periodoLabel(id)}
+Status: ${pData.status === 'fechado' ? 'Fechado' : 'Aberto'}
+
+Meta da filial ......... R$ ${fmtMoney(pData.metaFilial||0)}
+Total vendido .......... R$ ${fmtMoney(totalFilial)}
+Ajustes ................ R$ ${fmtMoney(ajustesSoma)}
+Percentual atingido ..... ${pctFilial.toFixed(1)}%
+
+Por vendedor:
+${linhas || '  Nenhum vendedor ativo\n'}`;
+  document.getElementById('relatorio-filial-texto').textContent = texto;
+}
+
+function renderRelatorioDiario(id, pData, lancs, dataId){
+  const l = lancs.find(x => x.id === dataId);
+  if(!l){ document.getElementById('relatorio-diario-texto').textContent = ''; return; }
+  const ativos = vendedoresCache.filter(v => v.ativo);
+  const metaAutomatica = ativos.length ? (pData.metaFilial||0) / ativos.length : 0;
+  const linhas = ativos.map(v => {
+    const val = (l.valores && l.valores[v.id]) || 0;
+    const metaInd = (pData.metasIndividuais||{})[v.id] ?? metaAutomatica;
+    const pct = metaInd>0 ? val/metaInd*100 : 0;
+    return { nome: v.nome, val, pct };
+  }).sort((a,b) => b.pct - a.pct);
+
+  const [ano,mes,dia] = dataId.split('-');
+  let texto = `RANKING DIÁRIO — ${dia}/${mes}/${ano}\nFilial 8340\n\n`;
+  linhas.forEach((x, idx) => {
+    texto += `${String(idx+1).padStart(2,' ')}º  ${x.nome.padEnd(22,' ')} R$ ${fmtMoney(x.val).padStart(14,' ')}   ${x.pct.toFixed(1)}%\n`;
+  });
+  document.getElementById('relatorio-diario-texto').textContent = texto;
+}
+
+document.getElementById('btn-copiar-relatorio-filial').addEventListener('click', () => {
+  navigator.clipboard.writeText(document.getElementById('relatorio-filial-texto').textContent)
+    .then(() => toast('Relatório copiado.'));
+});
+document.getElementById('btn-copiar-relatorio-diario').addEventListener('click', () => {
+  navigator.clipboard.writeText(document.getElementById('relatorio-diario-texto').textContent)
+    .then(() => toast('Relatório copiado.'));
+});
+</script>
+</body>
+</html>
