@@ -3,7 +3,7 @@
 Sistema web criado para uma filial de agência de viagens, para substituir o controle manual de vendas em planilhas Excel por uma ferramenta centralizada de metas, desempenho e fechamento mensal.
 
 ## O problema
-O acompanhamento de metas, vendas diárias e ranking da equipe era feito manualmente em Excel — um processo sujeito a erros de digitação, sem histórico auditável de alterações e sem visão consolidada do desempenho da filial ao longo do ano. Fechar um mês e abrir o próximo exigia recriar planilhas do zero, sem garantia de que os dados anteriores permaneceriam intactos.
+O acompanhamento de metas, vendas diárias e ranking da equipe era feito manualmente em Excel, um processo sujeito a erros de digitação, sem histórico auditável de alterações e sem visão consolidada do desempenho da filial ao longo do ano. Fechar um mês e abrir o próximo exigia recriar planilhas do zero, sem garantia de que os dados anteriores permaneceriam intactos.
 
 ## Meu papel
 Concebi, especifiquei os requisitos e validei o sistema em cada etapa, atuando como responsável de produto ao longo de todo o processo. Formalizei um documento de especificação com requisitos funcionais, não funcionais e regras de negócio antes do início do desenvolvimento, e conduzi a construção em fases, validando cada uma com dados reais da filial antes de avançar para a próxima. O desenvolvimento foi conduzido com apoio de IA generativa, sob minha orientação e decisões de escopo.
