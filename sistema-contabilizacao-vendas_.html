@@ -665,14 +665,19 @@
 <script>
 /* ============================================================
    CONFIGURAÇÃO FIREBASE
+   ⚠️ Substitua os valores abaixo pelas credenciais do SEU projeto
+   Firebase (Console do Firebase > Configurações do projeto > Seus apps).
+   Nunca suba credenciais reais em um repositório público — a segurança
+   dos dados é garantida pelas regras do Firestore (Authentication
+   obrigatório), não pelo sigilo dessas chaves.
    ============================================================ */
 const firebaseConfig = {
-  apiKey: "AIzaSyBOxegwaiZSWR6KI9l-VACEypN6-vAfRvo",
-  authDomain: "contabilizacao-vendas-8340.firebaseapp.com",
-  projectId: "contabilizacao-vendas-8340",
-  storageBucket: "contabilizacao-vendas-8340.firebasestorage.app",
-  messagingSenderId: "1024080802925",
-  appId: "1:1024080802925:web:3e7b91514091ff6f043b64"
+  apiKey: "SUA_API_KEY_AQUI",
+  authDomain: "SEU_PROJETO.firebaseapp.com",
+  projectId: "SEU_PROJETO",
+  storageBucket: "SEU_PROJETO.firebasestorage.app",
+  messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+  appId: "SEU_APP_ID"
 };
 
 firebase.initializeApp(firebaseConfig);
